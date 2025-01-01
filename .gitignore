@@ -55,6 +55,10 @@ cover/
 *.mo
 *.pot
 
+# Google API
+credentials.json
+token.json
+
 # Django stuff:
 *.log
 local_settings.py
