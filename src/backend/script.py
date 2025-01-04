@@ -1,10 +1,14 @@
 import os.path
-
+from datetime import datetime
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import base64
+
+from tools import attachment_extraction, message_body_extraction
+from firstpass import generate_firstpass_query
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
@@ -36,16 +40,34 @@ def main():
 
   try:
     # Call the Gmail API
+    search_query = generate_firstpass_query()
     service = build("gmail", "v1", credentials=creds)
-    results = service.users().labels().list(userId="me").execute()
-    labels = results.get("labels", [])
+    results = service.users().messages().list(userId='me', labelIds=['INBOX'],maxResults=5000, q=search_query).execute()
+    messages = results.get('messages', [])
 
-    if not labels:
-      print("No labels found.")
-      return
-    print("Labels:")
-    for label in labels:
-      print(label["name"])
+    while 'nextPageToken' in results:
+        page_token = results['nextPageToken']
+        results = service.users().messages().list(userId='me', labelIds=['INBOX'], pageToken=page_token, maxResults=5000,q=search_query).execute()
+        messages.extend(results.get('messages', []))
+    
+
+    print(f"Total messages found: {len(messages)}")
+    # Loop through each message
+    for msg in messages:
+        if msg['id'] != '193c726288d02a09':
+            continue
+        message = service.users().messages().get(userId='me', id=msg['id']).execute()
+        
+        subject = ''
+        for header in message['payload']['headers']:
+            if header['name'] == 'Subject':
+                subject = header['value']
+                break
+                
+        print(f"Message ID: {msg['id']}")
+        print(f"Subject: {subject}\nDate: {datetime.fromtimestamp(float(message['internalDate'])/1000).strftime('%Y-%m-%d %H:%M:%S')}")
+        html = message_body_extraction(service,message,msg['id'])
+        print(html)
 
   except HttpError as error:
     # TODO(developer) - Handle errors from gmail API.
