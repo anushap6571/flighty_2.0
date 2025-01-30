@@ -24,7 +24,6 @@ def attachment_extraction(service,message,msg_id) -> str:
             file_data = base64.urlsafe_b64decode(data.encode('UTF-8'))
             path = part['filename']
 
-            #TODO @anusha use claude directly to upload pdf
     return text
 
 
@@ -32,6 +31,8 @@ def attachment_extraction(service,message,msg_id) -> str:
 # Body is encoded in base64 and is html. In order to pull the raw unstructured text
 # we need to decode the html and then extract the text.
 def message_body_extraction(service,message,msg_id) -> str:
+    if 'data' not in message['payload']['body']:
+        return ""
     html = message['payload']['body']['data']
     html = base64.urlsafe_b64decode(html.encode('UTF-8'))
     return html.decode('utf-8')

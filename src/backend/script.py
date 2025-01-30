@@ -1,19 +1,20 @@
 import os.path
 from datetime import datetime
+from time import sleep
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import base64
-
+from dotenv import load_dotenv
 from tools import attachment_extraction, message_body_extraction
 from firstpass import generate_firstpass_query
-
+from anthropic import Anthropic
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 CREDS = "../../credentials.json"
-
+load_dotenv()
 
 def main():
   """Shows basic usage of the Gmail API.
