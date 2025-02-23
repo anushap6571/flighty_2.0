@@ -53,22 +53,22 @@ def main():
     
 
     print(f"Total messages found: {len(messages)}")
-    # Loop through each message
+
+
     for msg in messages:
-        if msg['id'] != '193c726288d02a09':
-            continue
         message = service.users().messages().get(userId='me', id=msg['id']).execute()
-        
         subject = ''
+        msg_id = ''
         for header in message['payload']['headers']:
             if header['name'] == 'Subject':
                 subject = header['value']
-                break
-                
-        print(f"Message ID: {msg['id']}")
+            if header['name'] == 'Message-ID':
+               msg_id = header['value']        
+        print(f"Message ID: {msg_id}")
         print(f"Subject: {subject}\nDate: {datetime.fromtimestamp(float(message['internalDate'])/1000).strftime('%Y-%m-%d %H:%M:%S')}")
-        html = message_body_extraction(service,message,msg['id'])
-        print(html)
+
+        # filename = f"data/email_{msg['id']}_{message['internalDate']}.html"
+        # file = attachment_extraction(service,message,msg['id'])
 
   except HttpError as error:
     # TODO(developer) - Handle errors from gmail API.

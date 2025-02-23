@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 # Common airline-related keywords and phrases for email filtering
 
 flight_keywords = {
@@ -98,10 +101,27 @@ common_patterns = [
 
 
 
+def get_airline_names() -> set:
+    to_remove = ["\\N", ""]
+    df = pd.read_csv('airline_codes.csv')
+    df.columns = ['index', 'airline_name', 'alias', 'IATA', 'ICAO', 'callsign', 'country', 'active']
+    df = df[df['active'] == 'Y']
+
+    airline_names = df['airline_name']
+    airline_names = airline_names.to_list()
+
+    airline_names = set(airline_names)
+    return airline_names
+
+
+
 def generate_firstpass_query()-> str:
     keywords = []
     for key, value in flight_keywords.items():
         keywords.extend(value)
-    
+
+    airline_names = get_airline_names()
+
     search_query = "{" + " ".join(f'+"{w}"' for w in keywords) + "}"
-    return search_query
+    airline_query = "{" + " ".join(f'+"{w}"' for w in airline_names) + "}"
+    return f'{search_query} AND {airline_query} OR filename:pdf'
